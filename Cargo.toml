@@ -14,9 +14,15 @@ default = []
 
 [dependencies]
 log = { version = "0.4", default-features = false }
-esp-hal = { version = "1", default-features = false, features = ["esp32c3", "unstable"] }
+esp-hal = { version = "1", default-features = false, features = ["esp32c3", "unstable", "rt"] }
 
 [dev-dependencies]
+riscv-rt = "0.16"
+esp-hal = { version = "1", default-features = false, features = ["rt"] }
+esp-println = { version = "0.12", features = ["esp32c3", "log"] }
+esp-backtrace = { version = "0.14", features = ["esp32c3", "exception-handler", "panic-handler", "println"] }
+esp-bootloader-esp-idf = "0.1"
+
 
 [package.metadata.docs.rs]
 targets = []

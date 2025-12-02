@@ -14,9 +14,6 @@ No `esp-idf` and `std` dependency (pure `esp-hal`).
 
 TODO
 
-
 ## Examples
 
-```bash
-RUST_LOG=info cargo run --release --example simple_sweep
-```
+[examples/README.md](examples/README.md) for more information about available examples.

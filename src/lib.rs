@@ -10,7 +10,7 @@ use esp_hal::{
     gpio::DriveMode,
     ledc::{
         LSGlobalClkSource, Ledc,
-        channel::{self, Channel, ChannelIFace},
+        channel::{self, Channel, ChannelHW, ChannelIFace},
         timer::{self, Timer, TimerIFace},
     },
     time::Rate,
@@ -115,7 +115,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         let center_duty_f = duty_range.start as f64 + (duty_range.end - duty_range.start) as f64 / 2.0;
         let center_duty = (center_duty_f + 0.5) as u32;
         
-        // Convert to percentage for channel configuration (esp-hal API limitation)
+        // Convert to percentage for channel configuration (configure only accepts percentages)
         let center_pct = ((center_duty as f64 / max_duty as f64) * 100.0 + 0.5) as u8;
 
         let mut channel = ledc.channel(channel_num, pin);
@@ -124,13 +124,14 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
             duty_pct: center_pct,
             drive_mode: DriveMode::PushPull,
         })?;
+        
+        channel.set_duty_hw(center_duty);
 
         info!(
-            "{name} servo: center_duty={center_duty}/{max_duty}, duty_range={duty_range:?}",
+            "{name} servo: duty_range={duty_range:?}, center_duty={center_duty}",
             name = name,
-            center_duty = center_duty,
-            max_duty = max_duty,
             duty_range = duty_range,
+            center_duty = center_duty,
         );
 
         Ok(Servo::<'a> {
@@ -154,18 +155,15 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
             return Ok(false);
         }
 
-        // Convert to percentage for esp-hal API (it only accepts percentages)
-        let new_duty_pct = ((new_duty as f64 / self.max_duty as f64) * 100.0 + 0.5) as u8;
-        
-        self.channel.set_duty(new_duty_pct)?;
+        // hardware method has better resolution
+        self.channel.set_duty_hw(new_duty);
         self.current_duty = new_duty;
-        info!(
-            "{} servo step({}) to duty={}/{} ({}%)",
+        trace!(
+            "{} servo step({}) to duty={}/{}",
             &self.name,
             step,
             new_duty,
-            self.max_duty,
-            new_duty_pct
+            self.max_duty
         );
         Ok(true)
     }
