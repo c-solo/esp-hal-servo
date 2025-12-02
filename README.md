@@ -1,6 +1,7 @@
 # esp-hal-servo
 
 A library for controlling servo motors using ESP32 LEDC (LED Control) peripheral.
+No `esp-idf` and `std` dependency (pure `esp-hal`).
 
 ## Features
 
@@ -12,3 +13,10 @@ A library for controlling servo motors using ESP32 LEDC (LED Control) peripheral
 ## Usage
 
 TODO
+
+
+## Examples
+
+```bash
+RUST_LOG=info cargo run --release --example simple_sweep
+```
