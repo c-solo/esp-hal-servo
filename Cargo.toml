@@ -1,0 +1,23 @@
+[package]
+name = "esp-hal-servo"
+version = "0.1.0"
+edition = "2024"
+authors = ["C.Solovev <constantine.solovev@gmail.com>"]
+description = "A library for controlling servo motors using ESP32 LEDC peripheral"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/c-solo/esp-hal-servo"
+keywords = ["esp32", "servo", "ledc", "embedded", "esp-hal"]
+categories = ["embedded", "hardware-support"]
+
+[features]
+default = []
+
+[dependencies]
+log = { version = "0.4", default-features = false }
+esp-hal = { version = "1", default-features = false, features = ["esp32c3", "unstable"] }
+
+[dev-dependencies]
+
+[package.metadata.docs.rs]
+targets = []
+rustdoc-args = ["--cfg", "docsrs"]
