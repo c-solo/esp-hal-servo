@@ -19,11 +19,11 @@ use log::{info, trace};
 
 #[derive(Debug, Clone)]
 pub struct ServoConfig {
-    /// Max angle that servo can't be turned, mostly 180, 360.
+    /// Max angle that servo can be turned, mostly 180, 360.
     pub max_angle: f64,
     /// What frequency expect servo (ex. 50Hz for SG90).
     pub frequency: Rate,
-    /// What pulse width in nanos servo supports (ex. 500-2400ns for SG90).
+    /// What pulse width in nanos servo supports (ex. 500000-2400000ns for SG90).
     pub pulse_width_ns: Range<u32>,
     /// PWM resolution in bits. Higher bits means more precise control.
     pub duty: Duty,
@@ -32,7 +32,7 @@ pub struct ServoConfig {
 impl ServoConfig {
     /// Config for [SG90](https://www.friendlywire.com/projects/ne555-servo-safe/SG90-datasheet.pdf).
     pub fn sg90(duty: Duty) -> Self {
-        // SG90 pulse width range: 500-2400 microseconds (500000-2400000 nanoseconds)
+        // SG90 pulse width range: 500-2400 us (500000-2400000 ns)
         let pulse_width_ns = 500_000..2_400_000;
         let max_angle = 180.0;
         ServoConfig {
@@ -111,20 +111,14 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         // Calculate duty range in absolute values
         let duty_range = calc_duty_range(&config, max_duty);
         
-        // Set to center position (using f64 for precision)
-        let center_duty_f = duty_range.start as f64 + (duty_range.end - duty_range.start) as f64 / 2.0;
-        let center_duty = (center_duty_f + 0.5) as u32;
-        
-        // Convert to percentage for channel configuration (configure only accepts percentages)
-        let center_pct = ((center_duty as f64 / max_duty as f64) * 100.0 + 0.5) as u8;
-
         let mut channel = ledc.channel(channel_num, pin);
         channel.configure(channel::config::Config {
             timer,
-            duty_pct: center_pct,
+            duty_pct: 0,
             drive_mode: DriveMode::PushPull,
         })?;
-        
+
+        let center_duty = duty_range.start + (duty_range.end - duty_range.start) / 2;
         channel.set_duty_hw(center_duty);
 
         info!(
@@ -146,12 +140,13 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         })
     }
 
-    /// Makes micro step, return false if servo reaches min or max position.
-    pub fn step(&mut self, step: u32) -> Result<bool, channel::Error> {
-        let new_duty = self.calc_duty(step);
+    /// Makes step in absolute duty units should be lesser than [`duty_range()`](Self::duty_range).
+    /// Return false if servo reaches min or max position.
+    /// See also [`step_pct()`](Self::step_pct) for percentage-based stepping.
+    pub fn step(&mut self, step_size: u32) -> Result<bool, channel::Error> {
+        let new_duty = self.calc_duty(step_size);
 
-        if new_duty >= self.duty_range.end || new_duty <= self.duty_range.start {
-            // servo reaches bounds, skip step
+        if new_duty == self.current_duty {
             return Ok(false);
         }
 
@@ -161,11 +156,19 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         trace!(
             "{} servo step({}) to duty={}/{}",
             &self.name,
-            step,
+            step_size,
             new_duty,
             self.max_duty
         );
         Ok(true)
+    }
+
+    /// Makes step in percentage of total range.
+    /// Returns false if servo reaches min or max position.
+    /// See also [`step()`](Self::step) for absolute duty-based stepping.
+    pub fn step_pct(&mut self, step_pct: u8) -> Result<bool, channel::Error> {
+        let step = ((step_pct as f64 / 100.0) * self.max_duty as f64 + 0.5) as u32;
+        self.step(step)
     }
 
     /// Set servo to move new direction.
@@ -190,13 +193,15 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         calculate_angle(&self.config, self.current_duty, self.max_duty)
     }
 
-    /// Returns the total number of steps available in the duty range.
-    pub fn total_steps(&self) -> u32 {
-        self.duty_range.end - self.duty_range.start
+    /// Returns the size of the duty range (difference between max and min duty values).
+    /// This is not the number of steps, but the range size in duty units.
+    pub fn duty_range(&self) -> u32 {
+        self.duty_range.end.saturating_sub(self.duty_range.start)
     }
 
+    /// Calculates new duty based on current direction and step size.
+    /// Returns clamped duty value within valid range.
     fn calc_duty(&self, step: u32) -> u32 {
-
         let new_duty = match self.direction {
             Dir::CW => {
                 // Move clockwise (increase duty)
@@ -208,8 +213,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
             },
         };
 
-        // Clamp to valid range
-        new_duty.clamp(self.duty_range.start, self.duty_range.end)
+        new_duty.clamp(self.duty_range.start, self.duty_range.end.saturating_sub(1))
     }
 }
 
@@ -236,6 +240,10 @@ fn calc_duty_range(config: &ServoConfig, max_duty: u32) -> Range<u32> {
     // Ensure values are within valid range
     let min_duty = min_duty.min(max_duty);
     let max_duty_val = max_duty_val.min(max_duty);
+    
+    // Ensure valid range (min < max)
+    let min_duty = min_duty.min(max_duty_val.saturating_sub(1));
+    let max_duty_val = max_duty_val.max(min_duty + 1);
 
     min_duty..max_duty_val
 }
@@ -246,8 +254,14 @@ fn calculate_angle(config: &ServoConfig, duty: u32, max_duty: u32) -> f64 {
     let pulse_ns = duty as f64 * NANOS_IS_SEC / config.frequency.as_hz() as f64 / max_duty as f64;
 
     // Map pulse width to angle
+    let pulse_range = (config.pulse_width_ns.end - config.pulse_width_ns.start) as f64;
+    // Prevent division by zero
+    if pulse_range <= 0.0 {
+        return 0.0;
+    }
+    
     (pulse_ns - config.pulse_width_ns.start as f64)
-        / (config.pulse_width_ns.end - config.pulse_width_ns.start) as f64
+        / pulse_range
         * config.max_angle
 }
 

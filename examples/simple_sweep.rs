@@ -52,28 +52,28 @@ fn main() -> ! {
     info!("Initial angle: {:.2}°", servo.get_angle());
 
     let delay = Delay::new();
-    let mut step = 1;
+    let mut step_pct = 2;
     loop {
         // Sweep forward (CW)
         servo.set_dir(Dir::CW);
         info!("Sweeping clockwise...");
-        while servo.step(step).unwrap() {
+        while servo.step_pct(step_pct).unwrap() {
             delay.delay_millis(20);
         }
-        info!("Reached max position: {:.2}°", servo.get_angle());
+        info!("Reached max position: {:.2}°, step={step_pct}%", servo.get_angle());
         delay.delay_millis(500);
 
         // Sweep backward (CCW)
         servo.set_dir(Dir::CCW);
         info!("Sweeping counter-clockwise...");
-        while servo.step(step).unwrap() {
+        while servo.step_pct(step_pct).unwrap() {
             delay.delay_millis(20);
         }
-        info!("Reached min position: {:.2}°", servo.get_angle());
+        info!("Reached min position: {:.2}°, step={step_pct}%", servo.get_angle());
         delay.delay_millis(500);
-        step += 1;
-        if step > 10 {
-            step = 1;
+        step_pct += 2;
+        if step_pct >= 20 {
+            step_pct = 2;
         }
     }
 }
