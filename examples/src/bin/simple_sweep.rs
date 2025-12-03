@@ -3,10 +3,10 @@
 //! This example demonstrates basic servo control by sweeping back and forth
 //! between minimum and maximum positions.
 //!
-//! # Building
+//! # Build and Flash
 //!
 //! ```bash
-//! cargo build --example simple_sweep --features esp32c3 --release
+//! cargo run -p examples --bin simple_sweep --features esp32c3 --release
 //! ```
 
 #![no_std]
@@ -31,7 +31,6 @@ fn main() -> ! {
 
     info!("Starting servo sweep example");
 
-    // Configure servo with SG90 preset
     let config = ServoConfig::sg90(timer::config::Duty::Duty12Bit);
 
     // Create LEDC controller and configure timer
@@ -58,28 +57,34 @@ fn main() -> ! {
     info!("Initial angle: {:.2}°", servo.get_angle());
 
     let delay = Delay::new();
-    let mut step_pct = 2;
+    let mut step_pct = 1;
     loop {
         // Sweep forward (CW)
         servo.set_dir(Dir::CW);
         info!("Sweeping clockwise...");
         while servo.step_pct(step_pct).unwrap() {
-            delay.delay_millis(20);
+            delay.delay_millis(50);
         }
-        info!("Reached max position: {:.2}°, step={step_pct}%", servo.get_angle());
-        delay.delay_millis(500);
+        info!(
+            "Reached max position: {:.2}°, step={step_pct}%",
+            servo.get_angle()
+        );
+        delay.delay_millis(1000);
 
         // Sweep backward (CCW)
         servo.set_dir(Dir::CCW);
         info!("Sweeping counter-clockwise...");
         while servo.step_pct(step_pct).unwrap() {
-            delay.delay_millis(20);
+            delay.delay_millis(50);
         }
-        info!("Reached min position: {:.2}°, step={step_pct}%", servo.get_angle());
+        info!(
+            "Reached min position: {:.2}°, step={step_pct}%",
+            servo.get_angle()
+        );
         delay.delay_millis(500);
-        step_pct += 2;
-        if step_pct >= 20 {
-            step_pct = 2;
+        step_pct += 1;
+        if step_pct >= 10 {
+            step_pct = 1;
         }
     }
 }

@@ -1,0 +1,29 @@
+[package]
+name = "examples"
+version = "0.2.0"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "simple_sweep"
+path = "src/bin/simple_sweep.rs"
+
+[features]
+default = ["esp32c3"]
+esp32 = ["esp-hal-servo/esp32", "esp-hal/esp32", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32", "esp-println/esp32", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32"]
+esp32c2 = ["esp-hal-servo/esp32c2", "esp-hal/esp32c2", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c2", "esp-println/esp32c2", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c2"]
+esp32c3 = ["esp-hal-servo/esp32c3", "esp-hal/esp32c3", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c3", "esp-println/esp32c3", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c3"]
+esp32c6 = ["esp-hal-servo/esp32c6", "esp-hal/esp32c6", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c6", "esp-println/esp32c6", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c6"]
+esp32h2 = ["esp-hal-servo/esp32h2", "esp-hal/esp32h2", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32h2", "esp-println/esp32h2", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32h2"]
+esp32s2 = ["esp-hal-servo/esp32s2", "esp-hal/esp32s2", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32s2", "esp-println/esp32s2", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32s2"]
+esp32s3 = ["esp-hal-servo/esp32s3", "esp-hal/esp32s3", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32s3", "esp-println/esp32s3", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32s3"]
+
+[dependencies]
+esp-hal-servo = { path = "..", default-features = false }
+esp-hal = { version = "1", default-features = false }
+log = { version = "0.4", default-features = false }
+riscv-rt = "0.16"
+esp-println = { version = "0.16", default-features = false }
+esp-backtrace = { version = "0.18", default-features = false, features = ["panic-handler", "println"] }
+esp-bootloader-esp-idf = "0.4"
+

@@ -27,7 +27,7 @@ GND       ------> GND (brown/black wire)
 ### Building and Running
 
 ```bash
-RUST_LOG=info cargo run --release --example simple_sweep --features esp32c3
+RUST_LOG=info cargo run --release -p examples --bin simple_sweep --features esp32c3
 ```
 
 **Note**: Replace `esp32c3` with the appropriate chip feature for your target:

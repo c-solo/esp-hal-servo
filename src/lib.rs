@@ -4,14 +4,12 @@
 
 use core::{marker::PhantomData, ops::Range};
 
-use esp_hal::ledc::timer::config::Duty;
-use esp_hal::ledc::timer::{TimerHW, TimerSpeed};
 use esp_hal::{
     gpio::DriveMode,
     ledc::{
         LSGlobalClkSource, Ledc,
         channel::{self, Channel, ChannelHW, ChannelIFace},
-        timer::{self, Timer, TimerIFace},
+        timer::{self, Timer, TimerHW, TimerIFace, TimerSpeed, config::Duty},
     },
     time::Rate,
 };
@@ -30,17 +28,32 @@ pub struct ServoConfig {
 }
 
 impl ServoConfig {
-    /// Config for [SG90](https://www.friendlywire.com/projects/ne555-servo-safe/SG90-datasheet.pdf).
-    pub fn sg90(duty: Duty) -> Self {
-        // SG90 pulse width range: 500-2400 us (500000-2400000 ns)
-        let pulse_width_ns = 500_000..2_400_000;
-        let max_angle = 180.0;
+    /// Default servo configuration with 50Hz frequency and
+    /// pulse width range of 500000-2500000 ns (0.5-2.5ms).
+    pub fn default_servo(duty: Duty, max_angle: f64) -> Self {
         ServoConfig {
             max_angle,
             frequency: Rate::from_hz(50),
-            pulse_width_ns,
+            // Standard servo pulse width range: 1000-2500 us
+            pulse_width_ns: 500_000..2_500_000,
             duty,
         }
+    }
+
+    /// Config for [SG90](https://www.friendlywire.com/projects/ne555-servo-safe/SG90-datasheet.pdf).
+    /// Can be used for SG90s as well.
+    pub fn sg90(duty: Duty) -> Self {
+        Self {
+            pulse_width_ns: 500_000..2_400_000,
+            ..Self::default_servo(duty, 180.0)
+        }
+    }
+
+    /// Config for [MG995](https://www.electronicoscaldas.com/datasheet/MG995_Tower-Pro.pdf).
+    /// High-torque servo motor with metal gears.
+    /// Can be used for MG996, MG996R as well.
+    pub fn mg995(duty: Duty) -> Self {
+        Self::default_servo(duty, 180.0)
     }
 
     /// Helper function to configure a timer with this servo's configuration.
@@ -110,7 +123,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
 
         // Calculate duty range in absolute values
         let duty_range = calc_duty_range(&config, max_duty);
-        
+
         let mut channel = ledc.channel(channel_num, pin);
         channel.configure(channel::config::Config {
             timer,
@@ -155,10 +168,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         self.current_duty = new_duty;
         trace!(
             "{} servo step({}) to duty={}/{}",
-            &self.name,
-            step_size,
-            new_duty,
-            self.max_duty
+            &self.name, step_size, new_duty, self.max_duty
         );
         Ok(true)
     }
@@ -167,7 +177,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
     /// Returns false if servo reaches min or max position.
     /// See also [`step()`](Self::step) for absolute duty-based stepping.
     pub fn step_pct(&mut self, step_pct: u8) -> Result<bool, channel::Error> {
-        let step = ((step_pct as f64 / 100.0) * self.max_duty as f64 + 0.5) as u32;
+        let step = ((step_pct as f64 / 100.0) * self.duty_range() as f64 + 0.5) as u32;
         self.step(step)
     }
 
@@ -206,11 +216,11 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
             Dir::CW => {
                 // Move clockwise (increase duty)
                 self.current_duty.saturating_add(step)
-            },
+            }
             Dir::CCW => {
                 // Move counter-clockwise (decrease duty)
                 self.current_duty.saturating_sub(step)
-            },
+            }
         };
 
         new_duty.clamp(self.duty_range.start, self.duty_range.end.saturating_sub(1))
@@ -232,15 +242,15 @@ const NANOS_IS_SEC: f64 = 1_000_000_000.0;
 fn calc_duty_range(config: &ServoConfig, max_duty: u32) -> Range<u32> {
     let min_pulse = config.pulse_width_ns.start;
     let max_pulse = config.pulse_width_ns.end;
-    
+
     // Calculate absolute duty values directly from pulse width
     let min_duty = pulse_to_duty(config, min_pulse, max_duty);
     let max_duty_val = pulse_to_duty(config, max_pulse, max_duty);
-    
+
     // Ensure values are within valid range
     let min_duty = min_duty.min(max_duty);
     let max_duty_val = max_duty_val.min(max_duty);
-    
+
     // Ensure valid range (min < max)
     let min_duty = min_duty.min(max_duty_val.saturating_sub(1));
     let max_duty_val = max_duty_val.max(min_duty + 1);
@@ -259,10 +269,11 @@ fn calculate_angle(config: &ServoConfig, duty: u32, max_duty: u32) -> f64 {
     if pulse_range <= 0.0 {
         return 0.0;
     }
-    
-    (pulse_ns - config.pulse_width_ns.start as f64)
-        / pulse_range
-        * config.max_angle
+
+    // Normalize pulse width to [0, 1] range within servo's pulse width range
+    let normalized =
+        ((pulse_ns - config.pulse_width_ns.start as f64) / pulse_range).clamp(0.0, 1.0);
+    normalized * config.max_angle
 }
 
 /// Maps pulse width in nanoseconds to absolute duty value as u32 (not percentage).
