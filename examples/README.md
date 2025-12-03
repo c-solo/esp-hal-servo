@@ -2,6 +2,10 @@
 
 Examples of using the `esp-hal-servo` library to control servo motors on ESP32.
 
+All examples are runnable only for RISC-V chips (C2, C3, C6, H2) with target: `riscv32imc-unknown-none-elf`.
+S2, S3 required different target (`xtensa-esp32s3-espidf`) and stable Rust does not support it yet 
+(required additional Espressif toolchain).
+
 ## simple_sweep
 
 Smooth movement between minimum and maximum positions.
@@ -20,11 +24,18 @@ GND       ------> GND (brown/black wire)
           ------> VCC (red wire) -> external 5V power supply (Use an external power supply for the servo)
 ```
 
-### Running
+### Building and Running
 
 ```bash
-RUST_LOG=info cargo run --release --example simple_sweep
+RUST_LOG=info cargo run --release --example simple_sweep --features esp32c3
 ```
+
+**Note**: Replace `esp32c3` with the appropriate chip feature for your target:
+- `esp32` - Original ESP32
+- `esp32c2` - ESP32-C2
+- `esp32c3` - ESP32-C3
+- `esp32c6` - ESP32-C6
+- `esp32h2` - ESP32-H2
 ```
 INFO - Starting servo sweep example
 INFO - sweep servo: duty_range=102..491, center_duty=296

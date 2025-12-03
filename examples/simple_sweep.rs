@@ -2,6 +2,12 @@
 //!
 //! This example demonstrates basic servo control by sweeping back and forth
 //! between minimum and maximum positions.
+//!
+//! # Building
+//!
+//! ```bash
+//! cargo build --example simple_sweep --features esp32c3 --release
+//! ```
 
 #![no_std]
 #![no_main]
