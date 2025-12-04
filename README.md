@@ -1,5 +1,9 @@
 # esp-hal-servo
 
+[![Crates.io](https://img.shields.io/crates/v/esp-hal-servo.svg)](https://crates.io/crates/esp-hal-servo)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://docs.rs/esp-hal-servo/badge.svg)](https://docs.rs/esp-hal-servo)
+
 A library for controlling servo motors using ESP32 LEDC (LED Control) peripheral.
 No `esp-idf` and `std` dependencies (pure `esp-hal`).
 
@@ -28,7 +32,7 @@ Add the library to your `Cargo.toml` with the appropriate chip feature:
 
 ```toml
 [dependencies]
-esp-hal-servo = { version = "0.1", features = ["esp32c3"] }
+esp-hal-servo = { version = "0.2", features = ["esp32c3"] }
 ```
 
 ## Examples

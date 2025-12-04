@@ -10,6 +10,7 @@ authors = ["C.Solovev <constantine.solovev@gmail.com>"]
 description = "A library for controlling servo motors using ESP32 LEDC peripheral"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/c-solo/esp-hal-servo"
+readme = "README.md"
 keywords = ["esp32", "servo", "ledc", "embedded", "esp-hal"]
 categories = ["embedded", "hardware-support"]
 

@@ -2,6 +2,8 @@
 
 #![no_std]
 
+pub mod utils;
+
 use core::{marker::PhantomData, ops::Range};
 
 use esp_hal::{
@@ -34,7 +36,7 @@ impl ServoConfig {
         ServoConfig {
             max_angle,
             frequency: Rate::from_hz(50),
-            // Standard servo pulse width range: 1000-2500 us
+            // Standard servo pulse width range: 500-2500 us
             pulse_width_ns: 500_000..2_500_000,
             duty,
         }
@@ -74,6 +76,28 @@ impl ServoConfig {
             frequency: self.frequency,
         })?;
         Ok(timer)
+    }
+
+    /// Calculates duty range in absolute values for this servo configuration.
+    /// Returns absolute duty values (0..max_duty), not percentages.
+    pub fn calc_duty_range(&self, max_duty: u32) -> Range<u32> {
+        utils::calc_duty_range(
+            self.pulse_width_ns.clone(),
+            self.frequency.as_hz() as f64,
+            max_duty,
+        )
+    }
+
+    /// Transforms absolute duty value to angle in degrees.
+    /// Returns angle in degrees (0.0..max_angle).
+    pub fn calculate_angle(&self, duty: u32, max_duty: u32) -> f64 {
+        utils::calculate_angle(
+            duty,
+            max_duty,
+            self.frequency.as_hz() as f64,
+            self.pulse_width_ns.clone(),
+            self.max_angle,
+        )
     }
 }
 
@@ -122,7 +146,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         };
 
         // Calculate duty range in absolute values
-        let duty_range = calc_duty_range(&config, max_duty);
+        let duty_range = config.calc_duty_range(max_duty);
 
         let mut channel = ledc.channel(channel_num, pin);
         channel.configure(channel::config::Config {
@@ -200,7 +224,8 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
 
     /// Returns current angle value in degrees.
     pub fn get_angle(&self) -> f64 {
-        calculate_angle(&self.config, self.current_duty, self.max_duty)
+        self.config
+            .calculate_angle(self.current_duty, self.max_duty)
     }
 
     /// Returns the size of the duty range (difference between max and min duty values).
@@ -233,51 +258,4 @@ pub enum Dir {
     CW,
     /// Counter-clockwise, decreases angle.
     CCW,
-}
-
-const NANOS_IS_SEC: f64 = 1_000_000_000.0;
-
-/// Calculates duty range in absolute values for given servo configuration.
-/// Returns absolute duty values (0..max_duty), not percentages.
-fn calc_duty_range(config: &ServoConfig, max_duty: u32) -> Range<u32> {
-    let min_pulse = config.pulse_width_ns.start;
-    let max_pulse = config.pulse_width_ns.end;
-
-    // Calculate absolute duty values directly from pulse width
-    let min_duty = pulse_to_duty(config, min_pulse, max_duty);
-    let max_duty_val = pulse_to_duty(config, max_pulse, max_duty);
-
-    // Ensure values are within valid range
-    let min_duty = min_duty.min(max_duty);
-    let max_duty_val = max_duty_val.min(max_duty);
-
-    // Ensure valid range (min < max)
-    let min_duty = min_duty.min(max_duty_val.saturating_sub(1));
-    let max_duty_val = max_duty_val.max(min_duty + 1);
-
-    min_duty..max_duty_val
-}
-
-/// Transforms absolute duty value to angle in respect that given servo pulse range.
-fn calculate_angle(config: &ServoConfig, duty: u32, max_duty: u32) -> f64 {
-    // Convert duty to pulse width in nanoseconds
-    let pulse_ns = duty as f64 * NANOS_IS_SEC / config.frequency.as_hz() as f64 / max_duty as f64;
-
-    // Map pulse width to angle
-    let pulse_range = (config.pulse_width_ns.end - config.pulse_width_ns.start) as f64;
-    // Prevent division by zero
-    if pulse_range <= 0.0 {
-        return 0.0;
-    }
-
-    // Normalize pulse width to [0, 1] range within servo's pulse width range
-    let normalized =
-        ((pulse_ns - config.pulse_width_ns.start as f64) / pulse_range).clamp(0.0, 1.0);
-    normalized * config.max_angle
-}
-
-/// Maps pulse width in nanoseconds to absolute duty value as u32 (not percentage).
-fn pulse_to_duty(config: &ServoConfig, pulse_ns: u32, max_duty: u32) -> u32 {
-    let duty_f = pulse_ns as f64 * config.frequency.as_hz() as f64 * max_duty as f64 / NANOS_IS_SEC;
-    (duty_f + 0.5) as u32
 }
