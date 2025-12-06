@@ -14,7 +14,7 @@ No `esp-idf` and `std` dependencies (pure `esp-hal`).
 - Angle calculation and position tracking
 - Support for all ESP32 variants (ESP32, ESP32C2, ESP32C3, ESP32C6, ESP32H2, ESP32S2, ESP32S3)
 
-## Features
+### Chip Features
 
 This library supports all ESP32 variants through optional features. You must enable at least one chip feature:
 
@@ -34,6 +34,35 @@ Add the library to your `Cargo.toml` with the appropriate chip feature:
 [dependencies]
 esp-hal-servo = { version = "0.2", features = ["esp32c3"] }
 ```
+
+## API Overview
+
+This library provides two approaches for controlling servo motors:
+
+### 1. Direct Angle Control
+
+Simply specify the desired angle and the servo will move to that position:
+
+```rust
+// Set servo to a specific angle (e.g., 42 degrees)
+servo.set_angle(42.0);
+```
+
+### 2. Step-by-Step Control with Direction
+
+Control the servo incrementally by setting direction and making steps:
+
+```rust
+// Set direction to clockwise
+servo.set_dir(Dir::CW);
+// Make a step of 10 duty units
+servo.step(10.0)?;
+// Or make a step as a percentage of the total range
+servo.step_pct(5)?; // 5% of the range
+```
+
+Use **direct angle control** when you need to position the servo at a specific angle.  
+Use **step-by-step control** when you need smooth, incremental movement or continuous rotation.
 
 ## Examples
 

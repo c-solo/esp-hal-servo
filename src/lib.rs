@@ -1,4 +1,32 @@
-//! This is a small lib for controlling servo using LEDC from [`esp-hal`](https://docs.rs/esp-hal/1.0.0/esp_hal/).
+//! A library for controlling servo motors using LEDC from [`esp-hal`](https://docs.rs/esp-hal/1.0.0/esp_hal/).
+//!
+//! This library provides two approaches for controlling servo motors:
+//!
+//! ## 1. Direct Angle Control
+//! Simply specify the desired angle from the servo's range and wait for it to reach the position.
+//! This is the simplest approach when you know the exact angle you want.
+//!
+//! ```no_run
+//! # use esp_hal_servo::*;
+//! # let mut servo = todo!();
+//! // Set servo to 42 degrees and wait for it to reach the position
+//! servo.set_angle(42.0);
+//! ```
+//!
+//! ## 2. Step-by-Step Control with Direction
+//! Specify the direction of movement and make a step. This approach gives you fine-grained
+//! control over the servo movement, allowing you to move it incrementally.
+//!
+//! ```no_run
+//! # use esp_hal_servo::*;
+//! # let mut servo = todo!();
+//! // Set direction to clockwise
+//! servo.set_dir(Dir::CW);
+//! // Make a step of 10 duty units
+//! servo.step(10.0)?;
+//! // Or make a step as a percentage of the total range
+//! servo.step_pct(5)?; // 5% of the range
+//! ```
 
 #![no_std]
 
@@ -16,6 +44,7 @@ use esp_hal::{
     time::Rate,
 };
 use log::{info, trace};
+use crate::utils::EPSILON;
 
 #[derive(Debug, Clone)]
 pub struct ServoConfig {
@@ -269,7 +298,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         };
 
         let min_duty = self.duty_range.start;
-        let max_duty = self.duty_range.end - 1.0;
+        let max_duty = self.duty_range.end - EPSILON;
         new_duty.clamp(min_duty, max_duty)
     }
 }
