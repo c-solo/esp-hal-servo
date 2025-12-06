@@ -32,8 +32,10 @@
 
 pub mod utils;
 
-use core::{marker::PhantomData, ops::Range};
-use core::ops::Neg;
+use core::{
+    marker::PhantomData,
+    ops::{Neg, Range},
+};
 use esp_hal::{
     gpio::DriveMode,
     ledc::{
@@ -44,7 +46,6 @@ use esp_hal::{
     time::Rate,
 };
 use log::{info, trace};
-use crate::utils::EPSILON;
 
 #[derive(Debug, Clone)]
 pub struct ServoConfig {
@@ -255,7 +256,8 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
 
     /// Returns current angle value in degrees.
     pub fn get_angle(&self) -> f32 {
-        self.config.duty_to_angle(self.current_duty, self.max_duty, &self.duty_range)
+        self.config
+            .duty_to_angle(self.current_duty, self.max_duty, &self.duty_range)
     }
 
     /// Sets servo to specified angle in degrees.
@@ -298,7 +300,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         };
 
         let min_duty = self.duty_range.start;
-        let max_duty = self.duty_range.end - EPSILON;
+        let max_duty = self.duty_range.end - utils::EPSILON;
         new_duty.clamp(min_duty, max_duty)
     }
 }

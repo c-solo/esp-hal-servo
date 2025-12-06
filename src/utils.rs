@@ -12,11 +12,7 @@ pub fn approx_eq(left: f32, right: f32) -> bool {
 }
 
 /// Transforms absolute duty value to angle in degrees.
-pub fn duty_to_angle(
-    duty: f32,
-    max_angle: f32,
-    duty_range: &Range<f32>,
-) -> f32 {
+pub fn duty_to_angle(duty: f32, max_angle: f32, duty_range: &Range<f32>) -> f32 {
     let clamped_duty = duty.clamp(duty_range.start, duty_range.end);
     ((clamped_duty - duty_range.start) / (duty_range.end - duty_range.start)) * max_angle
 }

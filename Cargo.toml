@@ -4,7 +4,7 @@ resolver = "2"
 
 [package]
 name = "esp-hal-servo"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["C.Solovev <constantine.solovev@gmail.com>"]
 description = "A library for controlling servo motors using ESP32 LEDC peripheral"
