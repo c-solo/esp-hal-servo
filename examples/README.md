@@ -45,3 +45,20 @@ INFO - Reached max position: 180.00°
 INFO - Sweeping counter-clockwise...
 INFO - Reached min position: 0.00°
 ```
+
+## async_angle_sweep
+
+Async servo control using only angle-based API. Demonstrates non-blocking servo movement
+using `AsyncServo` wrapper with automatic delay calculation based on servo speed.
+
+### Hardware
+
+Same as `simple_sweep` example.
+
+### Building and Running
+
+**Note**: This example requires the `embassy` feature and uses async/await.
+
+```bash
+RUST_LOG=info cargo run --release -p examples --bin async_angle_sweep --features esp32c3,embassy
+```

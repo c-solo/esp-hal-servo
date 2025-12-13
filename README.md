@@ -87,7 +87,7 @@ let servo = Servo::new("servo", config, &mut ledc, &mut timer, channel_num, pin)
 let mut async_servo = AsyncServo::new(servo);
 
 // Set angle asynchronously (delay is automatically calculated)
-async_servo.set_angle_async(90.0).await;
+async_servo.set_angle(90.0).await;
 
 // Step asynchronously (delay is automatically calculated)
 async_servo.set_dir(Dir::CW);

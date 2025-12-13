@@ -8,8 +8,13 @@ publish = false
 name = "simple_sweep"
 path = "src/bin/simple_sweep.rs"
 
+[[bin]]
+name = "async_angle_sweep"
+path = "src/bin/async_angle_sweep.rs"
+
 [features]
 default = ["esp32c3"]
+embassy = ["esp-hal-servo/embassy"]
 esp32 = ["esp-hal-servo/esp32", "esp-hal/esp32", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32", "esp-println/esp32", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32"]
 esp32c2 = ["esp-hal-servo/esp32c2", "esp-hal/esp32c2", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c2", "esp-println/esp32c2", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c2"]
 esp32c3 = ["esp-hal-servo/esp32c3", "esp-hal/esp32c3", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c3", "esp-println/esp32c3", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c3"]
@@ -26,4 +31,7 @@ riscv-rt = "0.16"
 esp-println = { version = "0.16", default-features = false }
 esp-backtrace = { version = "0.18", default-features = false, features = ["panic-handler", "println"] }
 esp-bootloader-esp-idf = "0.4"
+embassy-executor = { version = "0.5", features = ["arch-riscv32", "executor-thread"] }
+embassy-time = { version = "0.3", features = ["tick-hz-1_000_000"] }
+embassy-time-driver = "0.1"
 

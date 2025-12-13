@@ -57,7 +57,16 @@ fn main() -> ! {
     info!("Initial angle: {:.2}°", servo.get_angle());
 
     let delay = Delay::new();
+    let time_for_full_sweep = servo.calc_delay_ms(180.0).unwrap();
+
+    // Angle based API
+    servo.set_angle(0.0);
+    delay.delay_millis(time_for_full_sweep);
+    servo.set_angle(180.0);
+    delay.delay_millis(time_for_full_sweep);
+
     let mut step_pct = 1;
+    // Step based API
     loop {
         // Sweep forward (CW)
         servo.set_dir(Dir::CW);

@@ -42,7 +42,7 @@
 //! let mut async_servo = AsyncServo::new(servo);
 //!
 //! // Set angle asynchronously (delay is automatically calculated)
-//! async_servo.set_angle_async(90.0).await;
+//! async_servo.set_angle(90.0).await;
 //!
 //! // Step asynchronously (delay is automatically calculated)
 //! async_servo.set_dir(Dir::CW);
@@ -333,13 +333,13 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
     }
 
     /// Util method for calculating delay time in milliseconds based on rotation angle and servo speed.
-    pub fn calc_delay_ms(&self, angle_deg: f32) -> Option<u64> {
+    pub fn calc_delay_ms(&self, angle_deg: f32) -> Option<u32> {
         if angle_deg > self.config.max_angle {
             return None;
         }
 
         let delay_sec = angle_deg / self.config.speed_deg_per_sec;
-        Some((delay_sec * 1000.0) as u64)
+        Some((delay_sec * 1000.0) as u32)
     }
 
     /// Calculates new duty based on current direction and step size.

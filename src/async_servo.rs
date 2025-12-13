@@ -13,7 +13,7 @@
 //! let mut async_servo = AsyncServo::new(servo);
 //!
 //! // Set angle asynchronously (delay is automatically calculated)
-//! async_servo.set_angle_async(90.0).await;
+//! async_servo.set_angle(90.0).await;
 //!
 //! // Step asynchronously
 //! async_servo.set_dir(esp_hal_servo::Dir::CW);
@@ -45,7 +45,7 @@ use esp_hal::ledc::channel;
 ///
 /// // Move servo to 45 degrees asynchronously
 /// // Delay is automatically calculated based on rotation angle and speed
-/// async_servo.set_angle_async(45.0).await;
+/// async_servo.set_angle(45.0).await;
 ///
 /// // Make incremental steps
 /// async_servo.set_dir(esp_hal_servo::Dir::CW);
@@ -108,7 +108,7 @@ impl<'a, S: TimerSpeed> AsyncServo<'a, S> {
 
     /// Sets servo to specified angle in degrees with a custom delay.
     ///
-    /// Similar to [`set_angle_async`](Self::set_angle_async), but allows specifying
+    /// Similar to [`set_angle`](Self::set_angle), but allows specifying
     /// a custom delay time instead of calculating it from servo speed.
     ///
     /// # Arguments
@@ -253,10 +253,10 @@ impl<'a, S: TimerSpeed> AsyncServo<'a, S> {
     /// then waits for that duration if the delay is greater than zero.
     async fn wait_for_movement(&self, angle_before: f32, angle_after: f32) {
         let angle_diff = (angle_after - angle_before).abs();
-        if let Some(delay_ms) = self.servo.calc_delay_ms(angle_diff) {
-            if delay_ms > 0 {
-                Timer::after(Duration::from_millis(delay_ms)).await;
-            }
+        if let Some(delay_ms) = self.servo.calc_delay_ms(angle_diff)
+            && delay_ms > 0
+        {
+            Timer::after(Duration::from_millis(delay_ms as u64)).await;
         }
     }
 }
