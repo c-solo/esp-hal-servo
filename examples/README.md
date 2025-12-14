@@ -30,12 +30,9 @@ GND       ------> GND (brown/black wire)
 RUST_LOG=info cargo run --release -p examples --bin simple_sweep --features esp32c3
 ```
 
-**Note**: Replace `esp32c3` with the appropriate chip feature for your target:
-- `esp32` - Original ESP32
-- `esp32c2` - ESP32-C2
-- `esp32c3` - ESP32-C3
-- `esp32c6` - ESP32-C6
-- `esp32h2` - ESP32-H2
+**Note**: Replace `esp32c3` with the appropriate chip feature for your target (e.g., `esp32c2`, `esp32c6`, `esp32h2`).
+
+Expected output:
 ```
 INFO - Starting servo sweep example
 INFO - sweep servo: duty_range=102..491, center_duty=296
@@ -58,8 +55,19 @@ Same as `simple_sweep` example.
 ### Building and Running
 
 **Note**: This example requires the `async` feature and uses async/await.
-The example uses Embassy runtime with `embassy-time`, but any `DelayNs` implementation can be used.
+The example uses `esp-rtos` to initialize the `embassy-time` driver, and `embassy_time::Delay`
+(which implements `DelayNs` trait) is used directly. Any `DelayNs` implementation can be used.
 
 ```bash
 RUST_LOG=info cargo run --release -p examples --bin async_angle_sweep --features esp32c3,async
+```
+Expected output:
+```
+INFO - Starting async servo angle sweep example
+INFO - async_sweep servo: duty_range=102.375..491.4, center_duty=296.8875
+INFO - Initial angle: 90.00°
+INFO - Moving to 0°...
+INFO - Reached 0°
+INFO - Moving to 180°...
+INFO - Reached 180°
 ```

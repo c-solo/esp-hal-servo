@@ -1,6 +1,6 @@
 [package]
 name = "examples"
-version = "0.2.0"
+version = "0.4.0"
 edition = "2024"
 publish = false
 
@@ -13,8 +13,12 @@ name = "async_angle_sweep"
 path = "src/bin/async_angle_sweep.rs"
 
 [features]
-default = ["esp32c3"]
-async = ["esp-hal-servo/async"]
+default = ["esp32c3", "simple"]
+# simple_sweep feature
+simple = ["dep:riscv-rt"]
+# async_angle_sweep feature
+async = ["esp-hal-servo/async", "dep:embassy-executor", "dep:embassy-time", "dep:esp-rtos"]
+
 esp32 = ["esp-hal-servo/esp32", "esp-hal/esp32", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32", "esp-println/esp32", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32"]
 esp32c2 = ["esp-hal-servo/esp32c2", "esp-hal/esp32c2", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c2", "esp-println/esp32c2", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c2"]
 esp32c3 = ["esp-hal-servo/esp32c3", "esp-hal/esp32c3", "esp-hal/unstable", "esp-hal/rt", "esp-bootloader-esp-idf/esp32c3", "esp-println/esp32c3", "esp-println/uart", "esp-println/log-04", "esp-backtrace/esp32c3"]
@@ -27,12 +31,14 @@ esp32s3 = ["esp-hal-servo/esp32s3", "esp-hal/esp32s3", "esp-hal/unstable", "esp-
 esp-hal-servo = { path = "..", default-features = false }
 esp-hal = { version = "1", default-features = false }
 log = { version = "0.4", default-features = false }
-riscv-rt = "0.16"
 esp-println = { version = "0.16", default-features = false }
 esp-backtrace = { version = "0.18", default-features = false, features = ["panic-handler", "println"] }
 esp-bootloader-esp-idf = "0.4"
-embassy-executor = { version = "0.5", features = ["arch-riscv32", "executor-thread"] }
-embassy-time = { version = "0.3", features = ["tick-hz-1_000_000"] }
-embassy-time-driver = "0.1"
-embedded-hal-async = "1.0"
 
+# Dependencies for simple_sweep (non-async examples)
+riscv-rt = { version = "0.16", optional = true }
+
+# Dependencies for async_angle_sweep (async examples)
+embassy-executor = { version = "0.9", optional = true }
+embassy-time = { version = "0.5", features = ["tick-hz-1_000_000"], optional = true }
+esp-rtos = { version = "0.2.0", features = ["esp32c3", "embassy"], optional = true }

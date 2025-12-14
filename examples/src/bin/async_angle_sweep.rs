@@ -13,42 +13,31 @@
 #![no_std]
 #![no_main]
 
-use embedded_hal_async::delay::DelayNs;
 use esp_backtrace as _;
 use esp_bootloader_esp_idf::esp_app_desc;
 use esp_hal::{
     Config,
+    interrupt::software::SoftwareInterruptControl,
     ledc::{Ledc, channel, timer},
+    timer::timg::TimerGroup,
 };
 use esp_hal_servo::{Servo, ServoConfig, async_servo::AsyncServo};
 use log::info;
 
 esp_app_desc!();
 
-#[embassy_executor::main]
-async fn main(_spawner: embassy_executor::Spawner) {
+#[esp_rtos::main]
+async fn main(_s: embassy_executor::Spawner) {
     let peripherals = esp_hal::init(Config::default());
     esp_println::logger::init_logger(log::LevelFilter::Info);
 
-    // Initialize Embassy time driver
-    // Note: For esp-hal 1.0, you need to initialize the time driver
-    // This typically requires creating a driver that implements embassy_time_driver::Driver trait
-    // and registering it using embassy_time_driver::time_driver_impl! macro
-    // Please refer to esp-hal and embassy-time-driver documentation for the correct initialization method
-    // Example: embassy_time_driver::time_driver_impl!(static DRIVER: MyDriver = MyDriver::new(systimer.alarm0, systimer.alarm1, systimer.alarm2));
+    let timer_group0 = TimerGroup::new(peripherals.TIMG0);
+    let timer0 = timer_group0.timer0;
+    let sw_ints = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
+    let int0 = sw_ints.software_interrupt0;
+    esp_rtos::start(timer0, int0);
 
     info!("Starting async servo angle sweep example");
-
-    // Create a DelayNs adapter for embassy-time::Timer
-    struct EmbassyDelay;
-
-    impl DelayNs for EmbassyDelay {
-        async fn delay_ns(&mut self, ns: u32) {
-            embassy_time::Timer::after(embassy_time::Duration::from_nanos(ns as u64)).await;
-        }
-    }
-
-    let delay = EmbassyDelay;
 
     let config = ServoConfig::sg90(timer::config::Duty::Duty12Bit);
 
@@ -75,8 +64,9 @@ async fn main(_spawner: embassy_executor::Spawner) {
 
     info!("Initial angle: {:.2}°", servo.get_angle());
 
-    // Wrap servo in AsyncServo for async control with delay adapter
-    let mut async_servo = AsyncServo::new(servo, delay);
+    // Wrap servo in AsyncServo for async control
+    // embassy_time::Delay implements DelayNs trait and is provided by esp-rtos
+    let mut async_servo = AsyncServo::new(servo, embassy_time::Delay);
 
     loop {
         // Move to minimum position (0 degrees)
@@ -94,13 +84,5 @@ async fn main(_spawner: embassy_executor::Spawner) {
 
         // Wait a bit
         embassy_time::Timer::after(embassy_time::Duration::from_millis(500)).await;
-
-        // Move to center position (90 degrees)
-        info!("Moving to 90°...");
-        async_servo.set_angle(90.0).await;
-        info!("Reached 90°");
-
-        // Wait before next cycle
-        embassy_time::Timer::after(embassy_time::Duration::from_millis(1000)).await;
     }
 }

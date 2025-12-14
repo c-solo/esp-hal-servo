@@ -152,8 +152,8 @@ impl ServoConfig {
 
     /// Transforms absolute duty value to angle in degrees.
     /// Returns angle in degrees (0.0..max_angle).
-    pub fn duty_to_angle(&self, duty: f32, max_duty: f32, duty_range: &Range<f32>) -> f32 {
-        utils::duty_to_angle(duty, max_duty, duty_range)
+    pub fn duty_to_angle(&self, duty: f32, max_angle: f32, duty_range: &Range<f32>) -> f32 {
+        utils::duty_to_angle(duty, max_angle, duty_range)
     }
 
     /// Transforms angle in degrees to absolute duty value.
@@ -262,7 +262,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
     /// Returns current angle value in degrees.
     pub fn get_angle(&self) -> f32 {
         self.config
-            .duty_to_angle(self.current_duty, self.max_duty, &self.duty_range)
+            .duty_to_angle(self.current_duty, self.config.max_angle, &self.duty_range)
     }
 
     /// Set servo to move new direction.
