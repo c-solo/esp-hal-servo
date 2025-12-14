@@ -6,7 +6,7 @@
 //! Simply specify the desired angle from the servo's range and wait for it to reach the position.
 //! This is the simplest approach when you know the exact angle you want.
 //!
-//! ```ignore
+//! ```no_run
 //! # use esp_hal_servo::*;
 //! // servo is created elsewhere
 //! // Set servo to 42 degrees and wait for it to reach the position
@@ -17,7 +17,7 @@
 //! Specify the direction of movement and make a step. This approach gives you fine-grained
 //! control over the servo movement, allowing you to move it incrementally.
 //!
-//! ```ignore
+//! ```no_run
 //! # use esp_hal_servo::*;
 //! // servo is created elsewhere
 //! // Set direction to clockwise
@@ -28,18 +28,21 @@
 //! servo.step_pct(5)?; // 5% of the range
 //! ```
 //!
-//! ## 3. Async Control with Embassy (Optional)
-//! When the `embassy` feature is enabled, you can use async versions of the control methods
+//! ## 3. Async Control (Optional)
+//! When the `async` feature is enabled, you can use async versions of the control methods
 //! with the [`AsyncServo`](async_servo::AsyncServo) wrapper. This allows non-blocking servo
 //! control in async contexts. Delay is automatically calculated based on servo speed and rotation angle.
+//! The wrapper accepts any implementation of [`embedded-hal-async::delay::DelayNs`](https://docs.rs/embedded-hal-async/latest/embedded_hal_async/delay/trait.DelayNs.html),
+//! making it compatible with any async runtime (Embassy, RTOS, etc.).
 //!
-//! ```ignore
-//! # #[cfg(feature = "embassy")]
+//! ```no_run
+//! # #[cfg(feature = "async")]
 //! # async fn example() {
 //! # use esp_hal_servo::{Servo, ServoConfig, async_servo::AsyncServo};
+//! # use embedded_hal_async::delay::DelayNs;
 //! // Create servo with speed of 60 degrees per second (typical for SG90)
-//! // servo is created elsewhere
-//! let mut async_servo = AsyncServo::new(servo);
+//! // servo and delay (implementing DelayNs) are created elsewhere
+//! let mut async_servo = AsyncServo::new(servo, delay);
 //!
 //! // Set angle asynchronously (delay is automatically calculated)
 //! async_servo.set_angle(90.0).await;
@@ -54,7 +57,7 @@
 
 pub mod utils;
 
-#[cfg(feature = "embassy")]
+#[cfg(feature = "async")]
 pub mod async_servo;
 
 use core::{

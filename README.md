@@ -13,7 +13,7 @@ No `esp-idf` and `std` dependencies (pure `esp-hal`).
 - Support for custom servo configurations (SG90/SG90S preconfigured)
 - Angle calculation and position tracking
 - Support for all ESP32 variants (ESP32, ESP32C2, ESP32C3, ESP32C6, ESP32H2, ESP32S2, ESP32S3)
-- Optional async support via Embassy runtime (enable `embassy` feature)
+- Optional async support via `embedded-hal-async::delay::DelayNs` trait (enable `async` feature)
 
 ### Chip Features
 
@@ -36,13 +36,16 @@ Add the library to your `Cargo.toml` with the appropriate chip feature:
 esp-hal-servo = { version = "0.3", features = ["esp32c3"] }
 ```
 
-To enable async support with Embassy, add the `embassy` feature:
+To enable async support, add the `async` feature:
 
 ```toml
 [dependencies]
-esp-hal-servo = { version = "0.3", features = ["esp32c3", "embassy"] }
-embassy-time = "0.3"
+esp-hal-servo = { version = "0.3", features = ["esp32c3", "async"] }
+embedded-hal-async = "1.0"
 ```
+
+Note: You'll also need to provide an implementation of `embedded-hal-async::delay::DelayNs` trait.
+For example, with Embassy runtime, you can use `embassy-time` (which implements `DelayNs`).
 
 ## API Overview
 
@@ -73,18 +76,23 @@ servo.step_pct(5)?; // 5% of the range
 Use **direct angle control** when you need to position the servo at a specific angle.  
 Use **step-by-step control** when you need smooth, incremental movement or continuous rotation.
 
-### 3. Async Control with Embassy (Optional)
+### 3. Async Control (Optional)
 
-Enable `embassy` feature for using `AsyncServo` (allows non-blocking servo control).
+Enable `async` feature for using `AsyncServo` (allows non-blocking servo control).
 Delay is automatically calculated based on servo speed and rotation angle.
+
+The `AsyncServo` wrapper accepts any implementation of `embedded-hal-async::delay::DelayNs` trait,
+making it compatible with any async runtime (Embassy, RTOS, etc.).
 
 ```rust
 use esp_hal_servo::{Servo, ServoConfig, async_servo::AsyncServo};
+use embedded_hal_async::delay::DelayNs;
 
 // Create servo with speed of 60 degrees per second (typical for SG90)
 // Speed is configured in ServoConfig (e.g., ServoConfig::sg90() sets it to 60.0)
+// delay must implement DelayNs trait (e.g., embassy-time::Delay)
 let servo = Servo::new("servo", config, &mut ledc, &mut timer, channel_num, pin)?;
-let mut async_servo = AsyncServo::new(servo);
+let mut async_servo = AsyncServo::new(servo, delay);
 
 // Set angle asynchronously (delay is automatically calculated)
 async_servo.set_angle(90.0).await;

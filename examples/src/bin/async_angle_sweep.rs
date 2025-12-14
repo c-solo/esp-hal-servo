@@ -7,12 +7,13 @@
 //! # Build and Flash
 //!
 //! ```bash
-//! cargo run -p examples --bin async_angle_sweep --features esp32c3,embassy --release
+//! cargo run -p examples --bin async_angle_sweep --features esp32c3,async --release
 //! ```
 
 #![no_std]
 #![no_main]
 
+use embedded_hal_async::delay::DelayNs;
 use esp_backtrace as _;
 use esp_bootloader_esp_idf::esp_app_desc;
 use esp_hal::{
@@ -37,6 +38,17 @@ async fn main(_spawner: embassy_executor::Spawner) {
     // Example: embassy_time_driver::time_driver_impl!(static DRIVER: MyDriver = MyDriver::new(systimer.alarm0, systimer.alarm1, systimer.alarm2));
 
     info!("Starting async servo angle sweep example");
+
+    // Create a DelayNs adapter for embassy-time::Timer
+    struct EmbassyDelay;
+
+    impl DelayNs for EmbassyDelay {
+        async fn delay_ns(&mut self, ns: u32) {
+            embassy_time::Timer::after(embassy_time::Duration::from_nanos(ns as u64)).await;
+        }
+    }
+
+    let delay = EmbassyDelay;
 
     let config = ServoConfig::sg90(timer::config::Duty::Duty12Bit);
 
@@ -63,8 +75,8 @@ async fn main(_spawner: embassy_executor::Spawner) {
 
     info!("Initial angle: {:.2}°", servo.get_angle());
 
-    // Wrap servo in AsyncServo for async control
-    let mut async_servo = AsyncServo::new(servo);
+    // Wrap servo in AsyncServo for async control with delay adapter
+    let mut async_servo = AsyncServo::new(servo, delay);
 
     loop {
         // Move to minimum position (0 degrees)

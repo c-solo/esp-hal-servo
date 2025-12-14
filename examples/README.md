@@ -57,8 +57,9 @@ Same as `simple_sweep` example.
 
 ### Building and Running
 
-**Note**: This example requires the `embassy` feature and uses async/await.
+**Note**: This example requires the `async` feature and uses async/await.
+The example uses Embassy runtime with `embassy-time`, but any `DelayNs` implementation can be used.
 
 ```bash
-RUST_LOG=info cargo run --release -p examples --bin async_angle_sweep --features esp32c3,embassy
+RUST_LOG=info cargo run --release -p examples --bin async_angle_sweep --features esp32c3,async
 ```
