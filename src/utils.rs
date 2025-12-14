@@ -4,6 +4,10 @@
 use core::ops::Range;
 
 const NANOS_IS_SEC: f32 = 1_000_000_000.0;
+
+/// Epsilon value for floating-point comparisons.
+///
+/// Avoid issues with floating-point precision during equality checks.
 pub const EPSILON: f32 = 0.5;
 
 /// Checks if two duty values are approximately equal.

@@ -13,7 +13,7 @@ No `esp-idf` and `std` dependencies (pure `esp-hal`).
 - Support for custom servo configurations (SG90/SG90S preconfigured)
 - Angle calculation and position tracking
 - Support for all ESP32 variants (ESP32, ESP32C2, ESP32C3, ESP32C6, ESP32H2, ESP32S2, ESP32S3)
-- Optional async support via `embedded-hal-async::delay::DelayNs` trait (enable `async` feature)
+- Optional async support via `embedded-hal-async` (enable `async` feature)
 
 ### Chip Features
 
@@ -33,14 +33,14 @@ Add the library to your `Cargo.toml` with the appropriate chip feature:
 
 ```toml
 [dependencies]
-esp-hal-servo = { version = "0.3", features = ["esp32c3"] }
+esp-hal-servo = { version = "0.4", features = ["esp32c3"] }
 ```
 
 To enable async support, add the `async` feature:
 
 ```toml
 [dependencies]
-esp-hal-servo = { version = "0.3", features = ["esp32c3", "async"] }
+esp-hal-servo = { version = "0.4", features = ["esp32c3", "async"] }
 embedded-hal-async = "1.0"
 ```
 

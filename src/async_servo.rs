@@ -1,4 +1,4 @@
-//! Async servo control using `embedded-hal-async::delay::DelayNs` trait.
+//! Wrapper that makes [`Servo`] asynchronous by using async delays.
 //! Enable the `async` feature to use these types and methods.
 //!
 //! # Example
