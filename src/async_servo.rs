@@ -261,10 +261,10 @@ impl<'a, S: TimerSpeed, D: DelayNs> AsyncServo<'a, S, D> {
     /// then waits for that duration if the delay is greater than zero.
     async fn wait_for_movement(&mut self, angle_before: f32, angle_after: f32) {
         let angle_diff = (angle_after - angle_before).abs();
-        if let Some(delay_ms) = self.servo.calc_delay_ms(angle_diff)
-            && delay_ms > 0
-        {
-            self.delay.delay_ms(delay_ms).await;
+        if let Some(delay_ms) = self.servo.calc_delay_ms(angle_diff) {
+            if delay_ms > 0 {
+                self.delay.delay_ms(delay_ms).await;
+            }
         }
     }
 }

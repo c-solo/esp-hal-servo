@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "examples"]
+members = ["."]
 resolver = "2"
 
 [package]
@@ -26,7 +26,7 @@ esp32s2 = ["esp-hal/esp32s2", "esp-hal/unstable", "esp-hal/rt"]
 esp32s3 = ["esp-hal/esp32s3", "esp-hal/unstable", "esp-hal/rt"]
 
 [dependencies]
-esp-hal = { version = "1", default-features = false }
+esp-hal = { version = "=1.0.0-rc.0", default-features = false }
 embedded-hal-async = { version = "1.0", optional = true }
 
 log = { version = "0.4", default-features = false }
