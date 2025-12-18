@@ -9,7 +9,6 @@ use core::{
     ops::{Neg, Range},
 };
 use esp_hal::{
-    gpio::DriveMode,
     ledc::{
         Ledc,
         channel::{self, Channel, ChannelHW, ChannelIFace},
@@ -83,7 +82,7 @@ impl<'d, S: TimerSpeed> Servo<'d, S> {
         channel.configure(channel::config::Config {
             timer,
             duty_pct: 0,
-            drive_mode: DriveMode::PushPull,
+            pin_config: channel::config::PinConfig::PushPull,
         })?;
 
         let center_duty = duty_range.start + (duty_range.end - duty_range.start) / 2.0;
